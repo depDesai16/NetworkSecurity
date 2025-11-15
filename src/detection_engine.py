@@ -130,15 +130,24 @@ class DetectionEngine:
         """
         # Calculate metrics
         accuracy = accuracy_score(ground_truth, predictions)
-        precision = precision_score(ground_truth, predictions, average='binary', pos_label=1)
-        recall = recall_score(ground_truth, predictions, average='binary', pos_label=1)
-        f1 = f1_score(ground_truth, predictions, average='binary', pos_label=1)
+        precision = precision_score(ground_truth, predictions, average='binary', pos_label=1, zero_division=0)
+        recall = recall_score(ground_truth, predictions, average='binary', pos_label=1, zero_division=0)
+        f1 = f1_score(ground_truth, predictions, average='binary', pos_label=1, zero_division=0)
         
-        # Confusion matrix
-        cm = confusion_matrix(ground_truth, predictions)
+        # Confusion matrix with explicit labels
+        cm = confusion_matrix(ground_truth, predictions, labels=[0, 1])
         
-        # Calculate FPR and TPR
-        tn, fp, fn, tp = cm.ravel()
+        # Calculate FPR and TPR safely
+        if cm.size == 4:
+            tn, fp, fn, tp = cm.ravel()
+        else:
+            tn = fp = fn = tp = 0
+            if cm.size == 1:
+                if ground_truth[0] == 0:
+                    tn = cm[0, 0]
+                else:
+                    tp = cm[0, 0]
+        
         false_positive_rate = fp / (fp + tn) if (fp + tn) > 0 else 0
         true_positive_rate = tp / (tp + fn) if (tp + fn) > 0 else 0
         
@@ -181,9 +190,20 @@ class ModelEvaluator:
         recall = recall_score(y_true, y_pred, average='binary', pos_label=1, zero_division=0)
         f1 = f1_score(y_true, y_pred, average='binary', pos_label=1, zero_division=0)
         
-        # Confusion matrix
-        cm = confusion_matrix(y_true, y_pred)
-        tn, fp, fn, tp = cm.ravel()
+        # Confusion matrix with explicit labels to handle edge cases
+        cm = confusion_matrix(y_true, y_pred, labels=[0, 1])
+        
+        # Handle confusion matrix unpacking safely
+        if cm.size == 4:
+            tn, fp, fn, tp = cm.ravel()
+        else:
+            # Edge case: only one class present
+            tn = fp = fn = tp = 0
+            if cm.size == 1:
+                if y_true[0] == 0:
+                    tn = cm[0, 0]
+                else:
+                    tp = cm[0, 0]
         
         # Rates
         fpr = fp / (fp + tn) if (fp + tn) > 0 else 0
