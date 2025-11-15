@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Project specific
+data/*.csv
+models/*.pkl
+results/
+visualizations/*.png
+visualizations/*.pdf
+logs/
+*.log
+
+# Keep directory structure
+!data/.gitkeep
+!models/.gitkeep
+!results/.gitkeep
+!visualizations/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
