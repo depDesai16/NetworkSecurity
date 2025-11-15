@@ -29,13 +29,29 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Generate Synthetic Traffic
+### Option 1: Web Dashboard (Recommended)
+
+Launch the interactive web interface:
+
+```bash
+streamlit run app.py
+```
+
+Then open your browser to `http://localhost:8501` to access the dashboard where you can:
+- Generate traffic with interactive controls
+- Train models with real-time feedback
+- Visualize results with interactive charts
+- Compare model performance side-by-side
+
+### Option 2: Command Line Interface
+
+#### Generate Synthetic Traffic
 
 ```bash
 python ids_sim.py generate --samples 10000 --attack-ratio 0.3 --output data/traffic.csv
 ```
 
-### Train Models
+#### Train Models
 
 Train a Decision Tree model:
 ```bash
@@ -47,19 +63,19 @@ Train a K-Nearest Neighbors model:
 python ids_sim.py train --data data/traffic.csv --model knn --k 5 --output models/knn_model.pkl
 ```
 
-### Run Detection
+#### Run Detection
 
 ```bash
 python ids_sim.py detect --model models/dt_model.pkl --data data/test_traffic.csv --output results/
 ```
 
-### Create Visualizations
+#### Create Visualizations
 
 ```bash
 python ids_sim.py visualize --results results/ --output visualizations/
 ```
 
-### Run Full Simulation
+#### Run Full Simulation
 
 ```bash
 python ids_sim.py simulate --config configs/simulation.yaml
