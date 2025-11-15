@@ -6,7 +6,11 @@ Generates synthetic network traffic with both benign and malicious patterns
 import numpy as np
 import pandas as pd
 import time
+import logging
 from typing import List, Tuple
+from src.utils import DataValidationError, validate_positive_integer, validate_ratio
+
+logger = logging.getLogger('ids_simulation')
 
 
 class TrafficGenerator:
@@ -33,8 +37,12 @@ class TrafficGenerator:
         Returns:
             DataFrame containing the generated traffic dataset
         """
-        if not 0 <= attack_ratio <= 1:
-            raise ValueError("attack_ratio must be between 0 and 1")
+        try:
+            validate_positive_integer(num_samples, "num_samples")
+            validate_ratio(attack_ratio, "attack_ratio")
+        except DataValidationError as e:
+            logger.error(f"Invalid parameters for dataset generation: {e}")
+            raise
         
         num_attacks = int(num_samples * attack_ratio)
         num_benign = num_samples - num_attacks

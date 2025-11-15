@@ -5,6 +5,7 @@ Trains and persists ML models for intrusion detection
 
 import pickle
 import time
+import logging
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -12,6 +13,9 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from typing import Tuple, Dict, Any
+from src.utils import ModelError, DataValidationError
+
+logger = logging.getLogger('ids_simulation')
 
 
 class ModelTrainer:
@@ -71,16 +75,21 @@ class ModelTrainer:
             model: Trained model object
             filepath: Output file path
         """
-        model_data = {
-            'model': model,
-            'label_encoder': self.label_encoder,
-            'feature_columns': self.feature_columns
-        }
-        
-        with open(filepath, 'wb') as f:
-            pickle.dump(model_data, f)
-        
-        print(f"Model saved to {filepath}")
+        try:
+            model_data = {
+                'model': model,
+                'label_encoder': self.label_encoder,
+                'feature_columns': self.feature_columns
+            }
+            
+            with open(filepath, 'wb') as f:
+                pickle.dump(model_data, f)
+            
+            logger.info(f"Model saved to {filepath}")
+            print(f"Model saved to {filepath}")
+        except Exception as e:
+            logger.error(f"Failed to save model to {filepath}: {e}")
+            raise ModelError(f"Failed to save model: {e}")
     
     def load_model(self, filepath: str) -> object:
         """
@@ -92,15 +101,23 @@ class ModelTrainer:
         Returns:
             Loaded model object
         """
-        with open(filepath, 'rb') as f:
-            model_data = pickle.load(f)
-        
-        self.model = model_data['model']
-        self.label_encoder = model_data['label_encoder']
-        self.feature_columns = model_data['feature_columns']
-        
-        print(f"Model loaded from {filepath}")
-        return self.model
+        try:
+            with open(filepath, 'rb') as f:
+                model_data = pickle.load(f)
+            
+            self.model = model_data['model']
+            self.label_encoder = model_data['label_encoder']
+            self.feature_columns = model_data['feature_columns']
+            
+            logger.info(f"Model loaded from {filepath}")
+            print(f"Model loaded from {filepath}")
+            return self.model
+        except FileNotFoundError:
+            logger.error(f"Model file not found: {filepath}")
+            raise ModelError(f"Model file not found: {filepath}")
+        except Exception as e:
+            logger.error(f"Failed to load model from {filepath}: {e}")
+            raise ModelError(f"Failed to load model: {e}")
     
     def get_feature_importance(self, model: object) -> Dict[str, float]:
         """
