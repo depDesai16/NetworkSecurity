@@ -18,13 +18,22 @@ ENV/
 *.swo
 *~
 
-# Project specific
+# Project specific - Generated files
 data/*.csv
+data/simulation_traffic.csv
+data/traffic.csv
+data/web_traffic.csv
 models/*.pkl
+models/dt_model.pkl
+models/knn_model.pkl
+models/web_dt_model.pkl
+models/web_knn_model.pkl
 results/
+results/**/*
 visualizations/*.png
 visualizations/*.pdf
 logs/
+logs/**/*
 *.log
 
 # Keep directory structure
@@ -32,6 +41,9 @@ logs/
 !models/.gitkeep
 !results/.gitkeep
 !visualizations/.gitkeep
+
+# Streamlit
+.streamlit/
 
 # OS
 .DS_Store
