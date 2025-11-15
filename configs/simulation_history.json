@@ -1,0 +1,132 @@
+[
+  {
+    "config": {
+      "simulation": {
+        "name": "Default IDS Simulation",
+        "description": "Baseline simulation with standard parameters"
+      },
+      "traffic_generation": {
+        "num_samples": 10000,
+        "attack_ratio": 0.3,
+        "attack_types": [
+          "dos",
+          "port_scan",
+          "unauthorized_access"
+        ]
+      },
+      "models": {
+        "decision_tree": {
+          "max_depth": 10,
+          "min_samples_split": 5,
+          "criterion": "gini"
+        },
+        "knn": {
+          "n_neighbors": 5,
+          "weights": "uniform",
+          "metric": "euclidean"
+        }
+      },
+      "output": {
+        "results_dir": "results/",
+        "visualizations_dir": "visualizations/",
+        "save_models": true
+      }
+    },
+    "results": {
+      "Decision Tree": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "false_positive_rate": 0.0,
+        "true_positive_rate": 1.0,
+        "true_negatives": 1400,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "true_positives": 600,
+        "processing_time": 0.0,
+        "packets_per_second": 0.0
+      },
+      "KNN": {
+        "accuracy": 0.9195,
+        "precision": 0.9027522935779817,
+        "recall": 0.82,
+        "f1_score": 0.8593886462882097,
+        "false_positive_rate": 0.03785714285714286,
+        "true_positive_rate": 0.82,
+        "true_negatives": 1347,
+        "false_positives": 53,
+        "false_negatives": 108,
+        "true_positives": 492,
+        "processing_time": 0.0,
+        "packets_per_second": 0.0
+      }
+    },
+    "timestamp": "2025-11-15T16:39:03.230866"
+  },
+  {
+    "config": {
+      "simulation": {
+        "name": "Default IDS Simulation",
+        "description": "Baseline simulation with standard parameters"
+      },
+      "traffic_generation": {
+        "num_samples": 10000,
+        "attack_ratio": 0.3,
+        "attack_types": [
+          "dos",
+          "port_scan",
+          "unauthorized_access"
+        ]
+      },
+      "models": {
+        "decision_tree": {
+          "max_depth": 10,
+          "min_samples_split": 5,
+          "criterion": "gini"
+        },
+        "knn": {
+          "n_neighbors": 5,
+          "weights": "uniform",
+          "metric": "euclidean"
+        }
+      },
+      "output": {
+        "results_dir": "results/",
+        "visualizations_dir": "visualizations/",
+        "save_models": true
+      }
+    },
+    "results": {
+      "Decision Tree": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "false_positive_rate": 0.0,
+        "true_positive_rate": 1.0,
+        "true_negatives": 1400,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "true_positives": 600,
+        "processing_time": 0.0,
+        "packets_per_second": 0.0
+      },
+      "KNN": {
+        "accuracy": 0.9195,
+        "precision": 0.9027522935779817,
+        "recall": 0.82,
+        "f1_score": 0.8593886462882097,
+        "false_positive_rate": 0.03785714285714286,
+        "true_positive_rate": 0.82,
+        "true_negatives": 1347,
+        "false_positives": 53,
+        "false_negatives": 108,
+        "true_positives": 492,
+        "processing_time": 0.0,
+        "packets_per_second": 0.0
+      }
+    },
+    "timestamp": "2025-11-15T16:41:56.228918"
+  }
+]

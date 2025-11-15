@@ -1,0 +1,6 @@
+2025-11-15 16:41:55 - ids_simulation - INFO - Logging initialized. Log file: logs/ids_simulation_20251115_164155.log
+2025-11-15 16:41:55 - ids_simulation - INFO - Starting command: simulate
+2025-11-15 16:41:55 - ids_simulation - INFO - Configuration loaded from configs/default_simulation.yaml
+2025-11-15 16:41:55 - ids_simulation - INFO - Model saved to models/dt_model.pkl
+2025-11-15 16:41:55 - ids_simulation - INFO - Model saved to models/knn_model.pkl
+2025-11-15 16:41:56 - ids_simulation - INFO - Command simulate completed successfully
