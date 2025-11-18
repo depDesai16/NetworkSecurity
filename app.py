@@ -51,6 +51,8 @@ if 'models' not in st.session_state:
     st.session_state.models = {}
 if 'results' not in st.session_state:
     st.session_state.results = {}
+if 'noise_level' not in st.session_state:
+    st.session_state.noise_level = 'Synthetic (Clean)'
 
 # Sidebar navigation
 st.sidebar.title("AI-IDS Simulation")
@@ -127,9 +129,47 @@ elif page == "Generate Traffic":
     
     if st.button("Generate Dataset", type="primary"):
         with st.spinner("Generating traffic data..."):
+            # Map noise level to numeric value
+            noise_map = {
+                "Synthetic (Clean)": 0.0,
+                "Low Noise": 0.1,
+                "Medium Noise": 0.25,
+                "High Noise (Realistic)": 0.5
+            }
+            noise_factor = noise_map[noise_level]
+            
             generator = TrafficGenerator()
             dataset = generator.generate_dataset(num_samples, attack_ratio)
+            
+            # Add noise if requested
+            if noise_factor > 0:
+                st.info(f"Adding {noise_level} to make data more realistic...")
+                
+                # Add random noise to continuous features
+                for col in ['packet_size', 'packet_rate', 'duration']:
+                    if col in dataset.columns:
+                        noise = np.random.normal(0, dataset[col].std() * noise_factor, len(dataset))
+                        dataset[col] = dataset[col] + noise
+                        dataset[col] = dataset[col].clip(lower=0)  # Keep values positive
+                
+                # Add noise to flag counts
+                for col in ['syn_flag', 'ack_flag', 'fin_flag', 'failed_logins']:
+                    if col in dataset.columns:
+                        noise = np.random.randint(-int(2*noise_factor*10), int(2*noise_factor*10)+1, len(dataset))
+                        dataset[col] = (dataset[col] + noise).clip(lower=0)
+                
+                # Randomly flip some labels (label noise)
+                if noise_factor >= 0.25:
+                    flip_ratio = noise_factor * 0.1  # Up to 5% label noise at highest setting
+                    num_flips = int(len(dataset) * flip_ratio)
+                    flip_indices = np.random.choice(len(dataset), num_flips, replace=False)
+                    dataset.loc[flip_indices, 'label'] = dataset.loc[flip_indices, 'label'].apply(
+                        lambda x: 'benign' if x == 'malicious' else 'malicious'
+                    )
+                    st.warning(f"Added {num_flips} mislabeled samples to simulate real-world noise")
+            
             st.session_state.dataset = dataset
+            st.session_state.noise_level = noise_level
             
             # Save to file
             os.makedirs('data', exist_ok=True)
@@ -790,6 +830,75 @@ elif page == "Compare Models":
             height=500
         )
         st.plotly_chart(fig, use_container_width=True)
+        
+        # Overfitting Analysis
+        st.markdown("---")
+        st.subheader("Overfitting Analysis")
+        
+        st.markdown("""
+        **Understanding Model Performance:**
+        
+        When comparing these models, consider the following insights:
+        """)
+        
+        # Check if we have noise level info
+        noise_level = st.session_state.get('noise_level', 'Unknown')
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("""
+            **Decision Tree Characteristics:**
+            - Creates hard decision boundaries
+            - Can perfectly memorize training patterns
+            - Prone to overfitting on clean data
+            - May struggle with novel variations
+            """)
+            
+            if 'Decision Tree' in df_comparison['Model'].values:
+                dt_acc = df_comparison[df_comparison['Model'] == 'Decision Tree']['Accuracy'].values[0]
+                if dt_acc >= 0.99:
+                    st.warning("""
+                    **Potential Overfitting Detected!**
+                    
+                    The Decision Tree achieved near-perfect accuracy, which may indicate:
+                    - Memorization of training patterns
+                    - May not generalize to real-world traffic
+                    - Could fail on novel attack variations
+                    """)
+        
+        with col2:
+            st.markdown("""
+            **K-Nearest Neighbors Characteristics:**
+            - Distance-based classification
+            - More robust to noise
+            - Better generalization potential
+            - Slower on large datasets
+            """)
+            
+            if 'KNN' in df_comparison['Model'].values:
+                knn_acc = df_comparison[df_comparison['Model'] == 'KNN']['Accuracy'].values[0]
+                if knn_acc < 0.99:
+                    st.info("""
+                    **Better Generalization:**
+                    
+                    KNN's slightly lower accuracy may actually indicate:
+                    - Less overfitting to training data
+                    - Better performance on real-world traffic
+                    - More robust to variations in attack patterns
+                    """)
+        
+        st.markdown(f"""
+        **Data Realism Level:** {noise_level}
+        
+        **Research Insight:** The performance gap between models reveals important trade-offs:
+        - **Clean synthetic data** → Decision Trees can achieve perfect accuracy through memorization
+        - **Realistic noisy data** → KNN may outperform due to better generalization
+        - **Real-world deployment** → Models trained on realistic data are more reliable
+        
+        **Recommendation:** For production IDS systems, prefer models that maintain high accuracy 
+        on noisy/realistic data rather than perfect accuracy on clean synthetic data.
+        """)
 
 # About Page
 elif page == "About":
