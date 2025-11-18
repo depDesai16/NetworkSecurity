@@ -20,7 +20,7 @@ from src.config_manager import ConfigManager
 # Page configuration
 st.set_page_config(
     page_title="AI-IDS Simulation Tool",
-    page_icon="🛡️",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -53,10 +53,10 @@ if 'results' not in st.session_state:
     st.session_state.results = {}
 
 # Sidebar navigation
-st.sidebar.title("🛡️ AI-IDS Simulation")
+st.sidebar.title("AI-IDS Simulation")
 page = st.sidebar.radio(
     "Navigation",
-    ["Home", "Generate Traffic", "Train Models", "Run Detection", "Compare Models", "About"]
+    ["Home", "Generate Traffic", "Train Models", "Run Detection", "Attack Simulator", "Compare Models", "About"]
 )
 
 # Home Page
@@ -67,10 +67,10 @@ if page == "Home":
     ### Welcome to the AI-IDS Simulation Tool
     
     This interactive dashboard allows you to:
-    - 🔄 Generate synthetic network traffic with configurable attack patterns
-    - 🤖 Train machine learning models (Decision Tree & KNN)
-    - 🔍 Detect intrusions in network traffic
-    - 📊 Visualize performance metrics and compare models
+    -  Generate synthetic network traffic with configurable attack patterns
+    -  Train machine learning models (Decision Tree & KNN)
+    -  Detect intrusions in network traffic
+    -  Visualize performance metrics and compare models
     
     **Get Started:**
     1. Navigate to "Generate Traffic" to create a dataset
@@ -101,7 +101,7 @@ if page == "Home":
 
 # Generate Traffic Page
 elif page == "Generate Traffic":
-    st.header("🔄 Generate Synthetic Network Traffic")
+    st.header(" Generate Synthetic Network Traffic")
     
     col1, col2 = st.columns(2)
     
@@ -110,11 +110,19 @@ elif page == "Generate Traffic":
         attack_ratio = st.slider("Attack Ratio", min_value=0.0, max_value=1.0, value=0.3, step=0.05)
     
     with col2:
+        noise_level = st.select_slider(
+            "Data Realism Level",
+            options=["Synthetic (Clean)", "Low Noise", "Medium Noise", "High Noise (Realistic)"],
+            value="Synthetic (Clean)",
+            help="Higher noise makes data more realistic but harder to classify perfectly"
+        )
+        
         st.info(f"""
         **Configuration:**
         - Total Samples: {num_samples:,}
         - Benign Traffic: {int(num_samples * (1 - attack_ratio)):,}
         - Malicious Traffic: {int(num_samples * attack_ratio):,}
+        - Noise Level: {noise_level}
         """)
     
     if st.button("Generate Dataset", type="primary"):
@@ -127,7 +135,7 @@ elif page == "Generate Traffic":
             os.makedirs('data', exist_ok=True)
             dataset.to_csv('data/web_traffic.csv', index=False)
             
-            st.success(f"✅ Generated {len(dataset):,} samples successfully!")
+            st.success(f" Generated {len(dataset):,} samples successfully!")
     
     # Display dataset preview
     if st.session_state.dataset is not None:
@@ -168,10 +176,10 @@ elif page == "Generate Traffic":
 
 # Train Models Page
 elif page == "Train Models":
-    st.header("🤖 Train Machine Learning Models")
+    st.header(" Train Machine Learning Models")
     
     if st.session_state.dataset is None:
-        st.warning("⚠️ Please generate a dataset first!")
+        st.warning(" Please generate a dataset first!")
     else:
         tab1, tab2 = st.tabs(["Decision Tree", "K-Nearest Neighbors"])
         
@@ -217,7 +225,7 @@ elif page == "Train Models":
                     }
                     st.session_state.results['Decision Tree'] = metrics
                     
-                    st.success("✅ Decision Tree trained successfully!")
+                    st.success(" Decision Tree trained successfully!")
                     
                     # Display metrics
                     col1, col2, col3, col4 = st.columns(4)
@@ -272,7 +280,7 @@ elif page == "Train Models":
                     }
                     st.session_state.results['KNN'] = metrics
                     
-                    st.success("✅ KNN trained successfully!")
+                    st.success(" KNN trained successfully!")
                     
                     # Display metrics
                     col1, col2, col3, col4 = st.columns(4)
@@ -287,10 +295,10 @@ elif page == "Train Models":
 
 # Run Detection Page
 elif page == "Run Detection":
-    st.header("🔍 Run Intrusion Detection")
+    st.header(" Run Intrusion Detection")
     
     if not st.session_state.models:
-        st.warning("⚠️ Please train at least one model first!")
+        st.warning(" Please train at least one model first!")
     else:
         model_choice = st.selectbox("Select Model", list(st.session_state.models.keys()))
         
@@ -321,7 +329,7 @@ elif page == "Run Detection":
                     
                     metrics = ModelEvaluator.calculate_metrics(y_true, y_pred)
                     
-                    st.success("✅ Detection completed!")
+                    st.success(" Detection completed!")
                     
                     # Display metrics
                     col1, col2, col3, col4 = st.columns(4)
@@ -366,12 +374,353 @@ elif page == "Run Detection":
                     fig.update_layout(title="Detection Results Distribution", height=400)
                     st.plotly_chart(fig, use_container_width=True)
 
-# Compare Models Page
+# Attack Simulator Page
+elif page == "Attack Simulator":
+    st.header(" Cyber Attack Simulator")
+    
+    st.markdown("""
+    Simulate different types of cyber attacks and see how the AI-IDS detects them in real-time.
+    This demonstrates the model's ability to identify various attack patterns.
+    """)
+    
+    if not st.session_state.models:
+        st.warning(" Please train at least one model first!")
+    else:
+        model_choice = st.selectbox("Select Detection Model", list(st.session_state.models.keys()))
+        
+        # Attack type selection
+        st.subheader(" Select Attack Type")
+        
+        attack_type = st.radio(
+            "Choose an attack to simulate:",
+            ["Denial of Service (DoS)", "Port Scanning", "Unauthorized Access", "Mixed Attack Campaign", "Custom Attack"]
+        )
+        
+        # Attack parameters based on type
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            num_attack_packets = st.slider("Number of Attack Packets", 10, 500, 100)
+            num_benign_packets = st.slider("Number of Benign Packets (Background)", 0, 200, 50)
+        
+        with col2:
+            if attack_type == "Denial of Service (DoS)":
+                st.info("""
+                **DoS Attack Characteristics:**
+                - High packet rate (500-2000 pkt/s)
+                - Small packet sizes
+                - Many SYN flags
+                - Short connection durations
+                - Targets web servers (ports 80, 443)
+                """)
+                intensity = st.select_slider("Attack Intensity", ["Low", "Medium", "High", "Extreme"], value="High")
+            
+            elif attack_type == "Port Scanning":
+                st.info("""
+                **Port Scan Characteristics:**
+                - Sequential port access
+                - Quick connection attempts
+                - SYN packets without ACK
+                - Probing multiple ports
+                - Reconnaissance activity
+                """)
+                scan_range = st.slider("Port Range to Scan", 10, 1000, 100)
+            
+            elif attack_type == "Unauthorized Access":
+                st.info("""
+                **Unauthorized Access Characteristics:**
+                - Multiple failed login attempts
+                - Targets SSH, FTP, RDP ports
+                - Brute force patterns
+                - Repeated authentication failures
+                """)
+                failed_attempts = st.slider("Failed Login Attempts", 3, 50, 10)
+            
+            elif attack_type == "Mixed Attack Campaign":
+                st.info("""
+                **Mixed Campaign:**
+                - Combination of multiple attack types
+                - Simulates APT (Advanced Persistent Threat)
+                - Tests model's versatility
+                - More realistic attack scenario
+                """)
+                attack_mix = st.multiselect(
+                    "Select attack types to include:",
+                    ["DoS", "Port Scan", "Unauthorized Access"],
+                    default=["DoS", "Port Scan", "Unauthorized Access"]
+                )
+            
+            else:  # Custom Attack
+                st.info("""
+                **Custom Attack:**
+                - Configure your own attack parameters
+                - Experiment with different patterns
+                """)
+                custom_packet_rate = st.slider("Packet Rate", 1, 2000, 500)
+                custom_syn_flags = st.slider("SYN Flags", 0, 20, 10)
+        
+        if st.button(" Launch Attack Simulation", type="primary"):
+            with st.spinner("Simulating attack..."):
+                model_info = st.session_state.models[model_choice]
+                trainer = model_info['trainer']
+                model = model_info['model']
+                
+                # Generate attack traffic based on type
+                generator = TrafficGenerator()
+                attack_packets = []
+                
+                if attack_type == "Denial of Service (DoS)":
+                    intensity_map = {"Low": 0.5, "Medium": 1.0, "High": 1.5, "Extreme": 2.0}
+                    multiplier = intensity_map[intensity]
+                    
+                    for i in range(num_attack_packets):
+                        packet = generator._create_dos_packet(i * 0.001)
+                        packet['packet_rate'] *= multiplier
+                        attack_packets.append(packet)
+                
+                elif attack_type == "Port Scanning":
+                    for i in range(num_attack_packets):
+                        packet = generator._create_port_scan_packet(i * 0.01)
+                        packet['dst_port'] = 1000 + (i % scan_range)
+                        attack_packets.append(packet)
+                
+                elif attack_type == "Unauthorized Access":
+                    for i in range(num_attack_packets):
+                        packet = generator._create_unauthorized_access_packet(i * 0.1)
+                        packet['failed_logins'] = np.random.randint(failed_attempts // 2, failed_attempts)
+                        attack_packets.append(packet)
+                
+                elif attack_type == "Mixed Attack Campaign":
+                    packets_per_type = num_attack_packets // len(attack_mix)
+                    for attack in attack_mix:
+                        for i in range(packets_per_type):
+                            if attack == "DoS":
+                                packet = generator._create_dos_packet(i * 0.001)
+                            elif attack == "Port Scan":
+                                packet = generator._create_port_scan_packet(i * 0.01)
+                            else:
+                                packet = generator._create_unauthorized_access_packet(i * 0.1)
+                            attack_packets.append(packet)
+                
+                else:  # Custom Attack
+                    for i in range(num_attack_packets):
+                        packet = generator._create_dos_packet(i * 0.001)
+                        packet['packet_rate'] = custom_packet_rate
+                        packet['syn_flag'] = custom_syn_flags
+                        attack_packets.append(packet)
+                
+                # Add benign background traffic
+                benign_packets = []
+                for i in range(num_benign_packets):
+                    packet = generator._create_benign_packet(i * 0.5)
+                    benign_packets.append(packet)
+                
+                # Combine and shuffle
+                all_packets = attack_packets + benign_packets
+                np.random.shuffle(all_packets)
+                
+                # Create dataframe
+                attack_df = pd.DataFrame(all_packets)
+                
+                # Run detection
+                X = attack_df[trainer.feature_columns].values
+                y_pred = model.predict(X)
+                
+                if hasattr(model, 'predict_proba'):
+                    probabilities = model.predict_proba(X)
+                    confidences = np.max(probabilities, axis=1)
+                else:
+                    confidences = np.ones(len(y_pred))
+                
+                predictions = trainer.label_encoder.inverse_transform(y_pred)
+                
+                # Calculate detection metrics
+                total_attacks = len(attack_packets)
+                detected_attacks = sum(1 for i, p in enumerate(predictions) if p == 'malicious' and i < total_attacks)
+                false_positives = sum(1 for i, p in enumerate(predictions) if p == 'malicious' and i >= total_attacks)
+                
+                detection_rate = detected_attacks / total_attacks if total_attacks > 0 else 0
+                false_positive_rate = false_positives / num_benign_packets if num_benign_packets > 0 else 0
+                
+                # Display results
+                st.success(" Attack simulation completed!")
+                
+                # Key metrics
+                col1, col2, col3, col4 = st.columns(4)
+                
+                with col1:
+                    st.metric("Detection Rate", f"{detection_rate:.1%}", 
+                             delta="Good" if detection_rate > 0.8 else "Needs Improvement")
+                with col2:
+                    st.metric("Attacks Detected", f"{detected_attacks}/{total_attacks}")
+                with col3:
+                    st.metric("False Positives", false_positives,
+                             delta="Low" if false_positives < 5 else "High", delta_color="inverse")
+                with col4:
+                    avg_confidence = np.mean(confidences[:total_attacks])
+                    st.metric("Avg Confidence", f"{avg_confidence:.1%}")
+                
+                # Visualization: Detection Timeline
+                st.subheader(" Attack Detection Timeline")
+                
+                fig = go.Figure()
+                
+                # Mark attack packets
+                attack_indices = list(range(total_attacks))
+                attack_detected = [predictions[i] == 'malicious' for i in attack_indices]
+                
+                colors = ['#e74c3c' if detected else '#f39c12' for detected in attack_detected]
+                
+                fig.add_trace(go.Scatter(
+                    x=attack_indices,
+                    y=confidences[:total_attacks],
+                    mode='markers',
+                    name='Attack Packets',
+                    marker=dict(
+                        color=colors,
+                        size=10,
+                        line=dict(width=1, color='white')
+                    ),
+                    text=['Detected' if d else 'Missed' for d in attack_detected],
+                    hovertemplate='<b>Attack Packet</b><br>Index: %{x}<br>Confidence: %{y:.2%}<br>Status: %{text}<extra></extra>'
+                ))
+                
+                # Mark benign packets
+                if num_benign_packets > 0:
+                    benign_indices = list(range(total_attacks, len(predictions)))
+                    benign_detected = [predictions[i] == 'malicious' for i in benign_indices]
+                    
+                    benign_colors = ['#e74c3c' if detected else '#2ecc71' for detected in benign_detected]
+                    
+                    fig.add_trace(go.Scatter(
+                        x=benign_indices,
+                        y=confidences[total_attacks:],
+                        mode='markers',
+                        name='Benign Packets',
+                        marker=dict(
+                            color=benign_colors,
+                            size=8,
+                            symbol='diamond'
+                        ),
+                        text=['False Positive' if d else 'Correct' for d in benign_detected],
+                        hovertemplate='<b>Benign Packet</b><br>Index: %{x}<br>Confidence: %{y:.2%}<br>Status: %{text}<extra></extra>'
+                    ))
+                
+                fig.update_layout(
+                    title=f"{attack_type} Detection Results",
+                    xaxis_title="Packet Index",
+                    yaxis_title="Detection Confidence",
+                    height=500,
+                    hovermode='closest'
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # Attack characteristics analysis
+                st.subheader(" Attack Pattern Analysis")
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    # Packet rate distribution
+                    fig = go.Figure()
+                    fig.add_trace(go.Histogram(
+                        x=attack_df['packet_rate'][:total_attacks],
+                        name='Attack Traffic',
+                        marker_color='#e74c3c',
+                        opacity=0.7
+                    ))
+                    if num_benign_packets > 0:
+                        fig.add_trace(go.Histogram(
+                            x=attack_df['packet_rate'][total_attacks:],
+                            name='Benign Traffic',
+                            marker_color='#2ecc71',
+                            opacity=0.7
+                        ))
+                    fig.update_layout(
+                        title="Packet Rate Distribution",
+                        xaxis_title="Packets/Second",
+                        yaxis_title="Count",
+                        barmode='overlay',
+                        height=300
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                with col2:
+                    # Protocol distribution
+                    protocol_map = {0: 'TCP', 1: 'UDP', 2: 'ICMP'}
+                    attack_protocols = [protocol_map.get(p, 'Unknown') for p in attack_df['protocol'][:total_attacks]]
+                    protocol_counts = pd.Series(attack_protocols).value_counts()
+                    
+                    fig = go.Figure(data=[go.Pie(
+                        labels=protocol_counts.index,
+                        values=protocol_counts.values,
+                        hole=0.4
+                    )])
+                    fig.update_layout(title="Attack Protocol Distribution", height=300)
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                # Detailed attack breakdown
+                st.subheader("📋 Detection Breakdown")
+                
+                breakdown_data = {
+                    'Category': ['Total Attacks', 'Detected', 'Missed', 'Benign Traffic', 'False Positives'],
+                    'Count': [
+                        total_attacks,
+                        detected_attacks,
+                        total_attacks - detected_attacks,
+                        num_benign_packets,
+                        false_positives
+                    ],
+                    'Percentage': [
+                        '100%',
+                        f'{detection_rate:.1%}',
+                        f'{(1-detection_rate):.1%}' if total_attacks > 0 else '0%',
+                        '100%' if num_benign_packets > 0 else 'N/A',
+                        f'{false_positive_rate:.1%}' if num_benign_packets > 0 else 'N/A'
+                    ]
+                }
+                
+                st.table(pd.DataFrame(breakdown_data))
+                
+                # Recommendations
+                st.subheader(" Analysis & Recommendations")
+                
+                if detection_rate >= 0.95:
+                    st.success(" **Excellent Detection!** The model successfully identified most attack packets.")
+                elif detection_rate >= 0.80:
+                    st.info(" **Good Detection.** The model caught most attacks but could be improved.")
+                else:
+                    st.warning(" **Detection Needs Improvement.** Consider retraining with more diverse attack samples.")
+                
+                if false_positive_rate > 0.1:
+                    st.warning(f" **High False Positive Rate ({false_positive_rate:.1%}).** The model may be too sensitive.")
+                elif false_positive_rate > 0:
+                    st.info(f" **Low False Positive Rate ({false_positive_rate:.1%}).** Acceptable performance.")
+                else:
+                    st.success(" **No False Positives!** Perfect classification of benign traffic.")
+                
+                # Export results
+                st.markdown("---")
+                if st.button(" Export Attack Simulation Results"):
+                    results_data = {
+                        'attack_type': attack_type,
+                        'total_packets': len(all_packets),
+                        'attack_packets': total_attacks,
+                        'detected': detected_attacks,
+                        'detection_rate': detection_rate,
+                        'false_positives': false_positives,
+                        'model_used': model_choice
+                    }
+                    
+                    st.json(results_data)
+                    st.success("Results ready for export!")
+
 elif page == "Compare Models":
-    st.header("📊 Compare Model Performance")
+    st.header(" Compare Model Performance")
     
     if len(st.session_state.results) < 2:
-        st.warning("⚠️ Please train at least 2 models to compare!")
+        st.warning(" Please train at least 2 models to compare!")
     else:
         # Metrics comparison
         metrics_to_compare = ['accuracy', 'precision', 'recall', 'f1_score']
@@ -444,7 +793,7 @@ elif page == "Compare Models":
 
 # About Page
 elif page == "About":
-    st.header("ℹ️ About AI-IDS Simulation Tool")
+    st.header(" About AI-IDS Simulation Tool")
     
     st.markdown("""
     ### Project Overview
